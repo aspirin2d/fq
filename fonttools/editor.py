@@ -7,30 +7,33 @@ from flask import Flask, jsonify, request, render_template, send_from_directory,
 # ─── 1. Parse command-line arguments ────────────────────────────────────────────
 parser = argparse.ArgumentParser(
     description="Run a Flask server for editing a font‐OCR mapping. "
-                "You can specify where 'mapping.json' and glyph images live."
+    "You can specify where 'mapping.json' and glyph images live."
 )
 
 parser.add_argument(
-    "-o", "--output-dir",
+    "-o",
+    "--output-dir",
     default=os.path.join(os.path.dirname(__file__), "static", "output"),
     help=(
         "Directory that contains all glyph PNGs and 'mapping.json'. "
         "Each PNG should be named '<charcode>.png'. "
         "(Default: './output')"
-    )
+    ),
 )
 
 parser.add_argument(
-    "-H", "--host",
+    "-H",
+    "--host",
     default="0.0.0.0",
-    help="Host IP to bind the Flask server to. (Default: 0.0.0.0)"
+    help="Host IP to bind the Flask server to. (Default: 0.0.0.0)",
 )
 
 parser.add_argument(
-    "-p", "--port",
+    "-p",
+    "--port",
     type=int,
     default=5000,
-    help="Port to run the Flask server on. (Default: 5000)"
+    help="Port to run the Flask server on. (Default: 5000)",
 )
 
 args = parser.parse_args()
@@ -47,8 +50,10 @@ if not os.path.isdir(OUTPUT_DIR):
     exit(1)
 
 if not os.path.isfile(MAPPING_PATH):
-    print(f"[WARNING] 'mapping.json' not found in {OUTPUT_DIR}. "
-          f"You can still run the server, but GET /api/data will 404 until you place a valid JSON there.")
+    print(
+        f"[WARNING] 'mapping.json' not found in {OUTPUT_DIR}. "
+        f"You can still run the server, but GET /api/data will 404 until you place a valid JSON there."
+    )
     # Note: we do NOT exit here; we simply warn. If you’d rather fail immediately, uncomment the next line:
     # exit(1)
 
@@ -81,7 +86,7 @@ def get_mapping():
 @app.route("/api/save", methods=["POST"])
 def save_mapping():
     """
-    Accepts a JSON object payload like { "65": "A", "66": "B", ... } 
+    Accepts a JSON object payload like { "65": "A", "66": "B", ... }
     and overwrites mapping.json on disk.
     """
     try:
