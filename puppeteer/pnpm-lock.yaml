@@ -19,7 +19,7 @@ importers:
         version: 16.5.0
       openai:
         specifier: ^5.1.1
-        version: 5.1.1(ws@8.18.2)(zod@3.25.55)
+        version: 5.1.1(ws@8.18.2)(zod@3.25.56)
       puppeteer-core:
         specifier: ^24.10.0
         version: 24.10.0
@@ -32,6 +32,9 @@ importers:
       vitest:
         specifier: ^3.2.2
         version: 3.2.2(@types/node@22.15.30)
+      zod:
+        specifier: ^3.25.56
+        version: 3.25.56
     devDependencies:
       '@tsconfig/node-ts':
         specifier: ^23.6.1
@@ -879,8 +882,8 @@ packages:
   yauzl@2.10.0:
     resolution: {integrity: sha512-p4a9I6X6nu6IhoGmBqAcbJy1mlC4j27vEPZX9F4L4/vZT3Lyq1VkFHw/V/PUcB9Buo+DG3iHkT0x3Qya58zc3g==}
 
-  zod@3.25.55:
-    resolution: {integrity: sha512-219huNnkSLQnLsQ3uaRjXsxMrVm5C9W3OOpEVt2k5tvMKuA8nBSu38e0B//a+he9Iq2dvmk2VyYVlHqiHa4YBA==}
+  zod@3.25.56:
+    resolution: {integrity: sha512-rd6eEF3BTNvQnR2e2wwolfTmUTnp70aUTqr0oaGbHifzC3BKJsoV+Gat8vxUMR1hwOKBs6El+qWehrHbCpW6SQ==}
 
 snapshots:
 
@@ -1161,7 +1164,7 @@ snapshots:
     dependencies:
       devtools-protocol: 0.0.1452169
       mitt: 3.0.1
-      zod: 3.25.55
+      zod: 3.25.56
 
   cliui@8.0.1:
     dependencies:
@@ -1333,10 +1336,10 @@ snapshots:
     dependencies:
       wrappy: 1.0.2
 
-  openai@5.1.1(ws@8.18.2)(zod@3.25.55):
+  openai@5.1.1(ws@8.18.2)(zod@3.25.56):
     optionalDependencies:
       ws: 8.18.2
-      zod: 3.25.55
+      zod: 3.25.56
 
   pac-proxy-agent@7.2.0:
     dependencies:
@@ -1636,4 +1639,4 @@ snapshots:
       buffer-crc32: 0.2.13
       fd-slicer: 1.1.0
 
-  zod@3.25.55: {}
+  zod@3.25.56: {}

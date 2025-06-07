@@ -1,12 +1,12 @@
 import { Command } from 'commander';
 import { readFile, writeFile, mkdir } from 'fs/promises';
+import { z } from 'zod';
 import path from 'path';
+import { zodTextFormat } from "openai/helpers/zod";
 import OpenAI from 'openai';
 import 'dotenv/config'
 
-import type { ChapterInfo, Info } from './info.js';
-
-interface Data extends Info { updateAt?: string; }
+import type { ChapterInfo } from './info.js';
 
 const program = new Command();
 program
@@ -14,17 +14,20 @@ program
   .requiredOption('-l, --language <lang>', 'Target language')
   .option('-o, --output <dir>', 'Output folder', 'output')
   .option('-k, --api-key <key>', 'OpenAI API key', process.env.OPENAI_API_KEY)
-  .option('-m, --model <model>', 'OpenAI model', 'gpt-4o')
+  .option('-m, --model <model>', 'OpenAI model', 'gpt-4.1')
   .parse(process.argv);
 
 const opts = program.opts();
 
-async function translateText(openai: OpenAI, text: string, lang: string, model: string): Promise<string> {
-  const resp = await openai.responses.create({
+async function translateText(openai: OpenAI, chapter: ChapterInfo, lang: string, model: string) {
+  const resp = await openai.responses.parse({
     model,
-    input: `Translate the following text into ${lang}:\n${text}`
+    input: `You are a professional literary translator. Translate the following chapters's title and content into ${lang}  while preserving the tone, style, and meaning of the original text. Make the dialogue feel natural in the target language, and keep the formatting (paragraphs, dialogues, narration) clear and consistent.\n\`\`\`\njson\n${JSON.stringify(chapter)}\n\`\`\``,
+    text: {
+      format: zodTextFormat(z.object({ title: z.string(), content: z.array(z.string()) }), "translate")
+    }
   });
-  return resp.output_text
+  return resp.output_parsed
 }
 
 (async () => {
@@ -32,11 +35,9 @@ async function translateText(openai: OpenAI, text: string, lang: string, model: 
     throw new Error('OpenAI API key not provided');
   }
   const buf = await readFile(opts.input, 'utf8');
-  const data: Data | { info: Info; chapters: ChapterInfo[]; updateAt?: string } = JSON.parse(buf);
+  const data = JSON.parse(buf);
 
-  const chapters: ChapterInfo[] = Array.isArray((data as Data).chapters)
-    ? (data as Data).chapters
-    : (data as any).info?.chapters;
+  const chapters = data.chapters as ChapterInfo[];
   if (!chapters) {
     throw new Error('Invalid input JSON structure');
   }
@@ -46,9 +47,12 @@ async function translateText(openai: OpenAI, text: string, lang: string, model: 
   for (const ch of chapters) {
     if (!ch.content || ch.content.length === 0) continue;
     console.log(`Translating chapter: ${ch.title}`);
-    const text = ch.content.join('\n');
-    const translated = await translateText(openai, text, opts.language, opts.model);
-    ch.content = translated.split('\n').map(s => s.trim());
+    const translated = await translateText(openai, ch, opts.language, opts.model);
+    if (translated) {
+      console.log('translated: ', translated.title)
+      ch.content = translated.content;
+      ch.title = translated.title;
+    }
   }
 
   const outDir = opts.output;
