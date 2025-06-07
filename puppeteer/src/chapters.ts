@@ -1,15 +1,10 @@
 import type { Browser } from "puppeteer-core";
-import type { Info } from "./info.js";
+import type { Info, UpdateInfo } from "./info.js";
 import mapping from "../mapping.json" with { type: "json" }
 
 import { setTimeout } from "node:timers/promises";
 
-interface ChapterUpdate {
-  words: number;
-  updatedAt: Date;
-}
-
-export function parseChapterUpdate(line: string): ChapterUpdate | undefined {
+export function parseChapterUpdate(line: string): UpdateInfo | undefined {
   const regex = /^本章字数：(?<words>\d+)字更新时间：(?:(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})|(?<mNoYear>\d{2})-(?<dNoYear>\d{2}))$/;
   const match = line.match(regex);
   if (!match || !match.groups) return undefined;
@@ -36,10 +31,9 @@ function parseContent(content: string[]) {
   })
 }
 
-export async function getChapters(browser: Browser, info: Info) {
+export async function readChapters(browser: Browser, info: Info) {
   const chapters = info.chapters.filter(ch => ch.isLocked === false)
 
-  const res = []
   for (const ch of chapters) {
     const page = await browser.newPage();
     await page.goto(ch.href, { waitUntil: "domcontentloaded" })
@@ -63,13 +57,9 @@ export async function getChapters(browser: Browser, info: Info) {
       ps => ps.map(p => p.textContent.trim())
     )
     const parsed = parseContent(content)
-    res.push({
-      title,
-      update: subtitle ? parseChapterUpdate(subtitle) : undefined,
-      content: parsed,
-    })
-    await page.close();
+    ch.content = parsed;
+    ch.update = subtitle ? parseChapterUpdate(subtitle) : undefined
     await setTimeout(1000);
+    await page.close();
   }
-  return res
 }

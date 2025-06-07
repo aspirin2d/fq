@@ -5,7 +5,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 
 import { getInfo } from './info.js';
-import { getChapters } from './chapters.js';
+import { readChapters } from './chapters.js';
 
 const program = new Command();
 
@@ -34,9 +34,9 @@ async function saveJsonTo(obj: any, dirPath: string, fileName: string) {
 
   const info = await getInfo(browser, opts.url);
   console.log("Processing novel:", info.name)
-  const chapters = await getChapters(browser, info);
+  await readChapters(browser, info);
 
-  const result = { info, chapters, updateAt: new Date().toISOString() };
+  const result = { ...info, updateAt: new Date().toISOString() };
   await saveJsonTo(result, opts.output, `${info.name}.json`);
 
   await browser.close();

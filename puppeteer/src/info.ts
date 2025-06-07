@@ -1,9 +1,17 @@
 import type { Browser } from "puppeteer-core";
 
-export type ChapterInfo = {
+
+export interface UpdateInfo {
+  words: number;
+  updatedAt: Date;
+}
+
+export interface ChapterInfo {
   title: string,
   href: string,
   isLocked: boolean
+  content: string[],
+  update?: UpdateInfo,
 }
 
 export type Info = {
@@ -30,7 +38,8 @@ export async function getInfo(browser: Browser, url: string): Promise<Info> {
       return {
         title: linkEl?.textContent.trim() ?? '',
         href: linkEl?.href ?? '',
-        isLocked: lockEl !== null          // true if <span class="chapter-item-lock"> exists
+        isLocked: lockEl !== null,          // true if <span class="chapter-item-lock"> exists
+        content: [],
       };
     })
   );
