@@ -1,0 +1,26 @@
+{
+  "name": "fq-crawler",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "dev": "pnpm run build && node ./dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.5.1",
+  "dependencies": {
+    "@types/node": "^22.15.30",
+    "puppeteer-core": "^24.10.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.2"
+  },
+  "devDependencies": {
+    "@tsconfig/node-ts": "^23.6.1",
+    "@tsconfig/node24": "^24.0.1"
+  }
+}

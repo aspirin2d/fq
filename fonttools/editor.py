@@ -121,7 +121,7 @@ def serve_glyph_png(charcode):
 
 # ─── 4. Run the server ─────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    print(f"[*] Starting Flask server with:")
+    print("[*] Starting Flask server with:")
     print(f"    • OUTPUT_DIR    = {OUTPUT_DIR}")
     print(f"    • mapping.json  = {MAPPING_PATH}")
     print(f"    • Bind address  = {args.host}:{args.port}\n")

@@ -71,10 +71,11 @@
   <script>
     (async function() {
       const tableBody = document.querySelector("#mapping-table tbody");
-      const statusDiv = document.getElementById("status");
-      let mappingData = {};
-      let charcodes = [];
+      const statusDiv  = document.getElementById("status");
+      let mappingData;
+      let entries = [];
 
+      // 1. Fetch the new structured payload
       try {
         const resp = await fetch("/api/data");
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -85,52 +86,55 @@
         return;
       }
 
-      // Convert keys to integers and sort initially by charcode ascending
-      charcodes = Object.keys(mappingData).map(k => parseInt(k, 10));
-      charcodes.sort((a, b) => a - b);
+      // 2. Pull out the codes array (fallback to empty)
+      entries = Array.isArray(mappingData.codes)
+        ? mappingData.codes.slice()
+        : [];
 
-      // Function to render the table body based on the current charcodes array
+      // 3. Render function
       function renderTable() {
         tableBody.innerHTML = "";
-        charcodes.forEach(charcode => {
-          const text = mappingData[charcode] ?? "";
+        for (const { key, value } of entries) {
           const tr = document.createElement("tr");
 
+          // Charcode cell
           const tdCode = document.createElement("td");
-          tdCode.textContent = charcode;
+          tdCode.textContent = key;
           tr.appendChild(tdCode);
 
+          // Glyph image cell
           const tdImg = document.createElement("td");
-          const img = document.createElement("img");
-          img.src = `/glyphs/${charcode}.png`;
-          img.alt = `U+${charcode.toString(16).toUpperCase().padStart(4, "0")}`;
+          const img   = document.createElement("img");
+          img.src     = `/glyphs/${key}.png`;
+          img.alt     = `U+${parseInt(key,10).toString(16).toUpperCase().padStart(4,"0")}`;
           img.className = "glyph";
           tdImg.appendChild(img);
           tr.appendChild(tdImg);
 
+          // Editable text cell
           const tdText = document.createElement("td");
-          const input = document.createElement("input");
-          input.type = "text";
-          input.value = text;
+          const input  = document.createElement("input");
+          input.type   = "text";
+          input.value  = value;
           input.className = "text-input";
-          input.dataset.charcode = charcode;
+          input.dataset.key = key;
           tdText.appendChild(input);
           tr.appendChild(tdText);
 
           tableBody.appendChild(tr);
-        });
+        }
       }
 
-      // Initial render
+      // 4. Initial render
       renderTable();
 
-      // Sorting logic
+      // 5. Sorting logic
       document.querySelectorAll('th.sortable').forEach(header => {
         header.addEventListener('click', () => {
-          const key = header.dataset.key;         // 'charcode' or 'text'
-          let order = header.dataset.order;       // 'asc', 'desc', or 'none'
+          const sortKey = header.dataset.key;    // 'charcode' or 'text'
+          let   order   = header.dataset.order;  // 'asc', 'desc', or 'none'
 
-          // Reset all headers except the clicked one
+          // Reset siblings
           document.querySelectorAll('th.sortable').forEach(h => {
             if (h !== header) {
               h.dataset.order = 'none';
@@ -138,47 +142,46 @@
             }
           });
 
-          // Cycle order: none -> asc -> desc -> asc...
-          if (order === 'none') {
-            order = 'asc';
-          } else if (order === 'asc') {
-            order = 'desc';
-          } else {
-            order = 'asc';
-          }
+          // Cycle through orders
+          order = (order === 'asc' ? 'desc' : 'asc');
           header.dataset.order = order;
+          header.querySelector('.arrow').textContent = order === 'asc' ? '▲' : '▼';
 
-          // Update arrow indicator
-          const arrowSpan = header.querySelector('.arrow');
-          arrowSpan.textContent = order === 'asc' ? '▲' : (order === 'desc' ? '▼' : '');
-
-          if (key === 'charcode') {
-            charcodes.sort((a, b) => {
-              return order === 'asc' ? a - b : b - a;
-            });
-          } else if (key === 'text') {
-            charcodes.sort((a, b) => {
-              const ta = mappingData[a] ?? '';
-              const tb = mappingData[b] ?? '';
-              if (ta < tb) return order === 'asc' ? -1 : 1;
-              if (ta > tb) return order === 'asc' ? 1 : -1;
+          // Perform the sort
+          entries.sort((a, b) => {
+            if (sortKey === 'charcode') {
+              // numeric compare
+              return order === 'asc'
+                ? parseInt(a.key,10) - parseInt(b.key,10)
+                : parseInt(b.key,10) - parseInt(a.key,10);
+            } else {
+              // string compare on .value
+              const va = a.value || "";
+              const vb = b.value || "";
+              if (va < vb) return order === 'asc' ? -1 : 1;
+              if (va > vb) return order === 'asc' ? 1  : -1;
               return 0;
-            });
-          }
+            }
+          });
 
           renderTable();
         });
       });
 
-      // Save button handler
+      // 6. Save handler
       document.getElementById("save-btn").addEventListener("click", async () => {
         statusDiv.textContent = "Saving…";
-        // Gather all inputs, build a new mapping object
+
+        // Pull edits back into our entries array
         document.querySelectorAll("input.text-input").forEach(inputElem => {
-          const code = inputElem.dataset.charcode;
-          const val = inputElem.value;
-          mappingData[code] = val;
+          const key = inputElem.dataset.key;
+          const idx = entries.findIndex(e => e.key === key);
+          if (idx >= 0) entries[idx].value = inputElem.value;
         });
+
+        // Update metadata
+        mappingData.updatedAt = new Date().toISOString();
+        mappingData.codes     = entries;
 
         try {
           const response = await fetch("/api/save", {
@@ -197,6 +200,7 @@
           statusDiv.textContent = "❌ Save failed: " + err.message;
         }
 
+        // Clear status after a few seconds
         setTimeout(() => { statusDiv.textContent = ""; }, 3000);
       });
     })();
