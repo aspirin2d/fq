@@ -25,7 +25,7 @@ async function saveJsonTo(obj: any, dirPath: string, fileName: string) {
   console.log(`✅ JSON saved to ${filePath}`);
 }
 
-; (async () => {
+(async () => {
   const browser = await puppeteer.launch({
     executablePath: opts.chromePath,
     headless: true,
@@ -33,6 +33,7 @@ async function saveJsonTo(obj: any, dirPath: string, fileName: string) {
   });
 
   const info = await getInfo(browser, opts.url);
+  console.log("Processing novel:", info.name)
   const chapters = await getChapters(browser, info);
 
   const result = { info, chapters, updateAt: new Date().toISOString() };

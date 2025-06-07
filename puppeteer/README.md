@@ -51,13 +51,13 @@ A simple Puppeteer-based CLI tool to scrape novel metadata and chapter content f
 Compile (if needed) and run the CLI:
 
 ```bash
-# With ts-node (no build step)
+# With pnpm
 pnpm run dev \
   --url "https://fanqienovel.com/page/<NOVEL-ID>" \
   --chrome-path "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
   --output "output"
 
-# Or, after building to JavaScript
+# Or, npm
 npm run dev \
   --url "https://fanqienovel.com/page/<NOVEL-ID>" \
   --chrome-path "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \

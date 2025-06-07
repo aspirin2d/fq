@@ -47,11 +47,15 @@ export async function getChapters(browser: Browser, info: Info) {
     const titleHandle = await page.waitForSelector(".muye-reader-title")
     const title: string = await titleHandle?.evaluate(el => el.textContent) || ""
 
-    const subtitleHandle = await page.waitForSelector(".muye-reader-subtitle")
-    const subtitle = await subtitleHandle?.evaluate(el => el.textContent)
+    console.log("Processing chapter:", title)
 
-    const update = parseChapterUpdate(subtitle)
-    console.log("Processing:", title)
+    let subtitle: string | undefined;
+    try {
+      const subtitleHandle = await page.waitForSelector(".muye-reader-subtitle", { timeout: 3000 })
+      subtitle = await subtitleHandle?.evaluate(el => el.textContent)
+    } catch (e) {
+      console.warn("Subtitle Not Found")
+    }
 
     await page.waitForSelector(".muye-reader-content")
     const content = await page.$$eval(
@@ -61,7 +65,7 @@ export async function getChapters(browser: Browser, info: Info) {
     const parsed = parseContent(content)
     res.push({
       title,
-      update,
+      update: subtitle ? parseChapterUpdate(subtitle) : undefined,
       content: parsed,
     })
     await page.close();
