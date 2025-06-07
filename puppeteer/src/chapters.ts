@@ -19,7 +19,7 @@ export function parseChapterUpdate(line: string): UpdateInfo | undefined {
 
   return {
     words,
-    updatedAt: new Date(year, month - 1, day)
+    updatedAt: new Date(year, month - 1, day).toISOString()
   };
 }
 

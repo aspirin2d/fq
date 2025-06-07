@@ -3,7 +3,7 @@ import type { Browser } from "puppeteer-core";
 
 export interface UpdateInfo {
   words: number;
-  updatedAt: Date;
+  updatedAt: string;
 }
 
 export interface ChapterInfo {
