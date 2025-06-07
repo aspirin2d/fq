@@ -28,18 +28,11 @@ export function parseChapterUpdate(line: string): ChapterUpdate | undefined {
   };
 }
 
+const codeMap = new Map(mapping.codes.map(c => [c.key, c.value]));
+
 function parseContent(content: string[]) {
   return content.map(str => {
-    const decoded = [...str].map(ch => {
-      const code = ch.codePointAt(0);
-      if (code) {
-        const codex = mapping.codes.find(item => item.key === code.toString())
-        if (codex) return codex.value
-        return ch
-      }
-    })
-
-    return decoded.join("")
+    return [...str].map(ch => codeMap.get(ch.codePointAt(0)?.toString() ?? "") ?? ch).join("");
   })
 }
 
@@ -71,7 +64,8 @@ export async function getChapters(browser: Browser, info: Info) {
       update,
       content: parsed,
     })
+    await page.close();
+    await setTimeout(1000);
   }
-
   return res
 }

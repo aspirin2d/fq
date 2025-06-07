@@ -17,7 +17,7 @@ export async function getInfo(browser: Browser, url: string): Promise<Info> {
   await page.goto(url, { waitUntil: "domcontentloaded" })
 
   const nameHandle = await page.waitForSelector('.info-name h1');
-  const name = await nameHandle?.evaluate(el => el.textContent)
+  const name = await nameHandle?.evaluate(el => el.textContent) || "Unkown title"
 
   const abstractContentHandle = await page.waitForSelector('.page-abstract-content p');
   const abstractContent = await abstractContentHandle?.evaluate(el => el.textContent)

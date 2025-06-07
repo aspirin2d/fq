@@ -1,50 +1,42 @@
-import puppeteer from "puppeteer-core"
+// src/index.ts
+import { Command } from 'commander';
+import puppeteer from 'puppeteer-core';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 
-import { getInfo } from "./info.js";
-import { getChapters } from "./chapters.js";
+import { getInfo } from './info.js';
+import { getChapters } from './chapters.js';
 
-const CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-const OUTPUT_PATH = "output"
+const program = new Command();
 
-const FQ_URL = 'https://fanqienovel.com/page/7143038691944959011';
+program
+  .requiredOption('-u, --url <string>', 'The novel URL to scrape')
+  .option('-c, --chrome-path <path>', 'Path to Chrome executable',
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
+  .option('-o, --output <dir>', 'Output folder', 'output')
+  .parse(process.argv);
 
-// ES module style (Node.js 14+)
+const opts = program.opts();
+
 async function saveJsonTo(obj: any, dirPath: string, fileName: string) {
-  try {
-    // 1. Ensure the directory exists (creates nested folders if needed)
-    await mkdir(dirPath, { recursive: true });
-
-    // 2. Build the full path
-    const filePath = path.join(dirPath, fileName);
-
-    // 3. Serialize and write
-    const json = JSON.stringify(obj, null, 2);
-    await writeFile(filePath, json, 'utf8');
-
-    console.log(`✅ JSON saved to ${filePath}`);
-  } catch (err) {
-    console.error(`❌ Failed to save JSON:`, err);
-    throw err;
-  }
+  await mkdir(dirPath, { recursive: true });
+  const filePath = path.join(dirPath, fileName);
+  await writeFile(filePath, JSON.stringify(obj, null, 2), 'utf8');
+  console.log(`✅ JSON saved to ${filePath}`);
 }
 
+; (async () => {
+  const browser = await puppeteer.launch({
+    executablePath: opts.chromePath,
+    headless: true,
+    defaultViewport: { width: 1024, height: 1600 },
+  });
 
-const browser = await puppeteer.launch({
-  executablePath: CHROME_PATH,
-  headless: true,
-  // portrait view port
-  defaultViewport: {
-    width: 1024,
-    height: 1600,
-  }
-})
+  const info = await getInfo(browser, opts.url);
+  const chapters = await getChapters(browser, info);
 
-const info = await getInfo(browser, FQ_URL)
-const chapters = await getChapters(browser, info)
+  const result = { info, chapters, updateAt: new Date().toISOString() };
+  await saveJsonTo(result, opts.output, `${info.name}.json`);
 
-const res = { info, chapters, updateAt: new Date() }
-await saveJsonTo(res, OUTPUT_PATH, info.name + ".json")
-
-browser.close();
+  await browser.close();
+})();
