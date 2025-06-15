@@ -7,7 +7,8 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest",
-    "crawl": "pnpm run build && node ./dist/index.js",
+    "crawl": "pnpm run build && node ./dist/crawl.js",
+    "books": "pnpm run build && node ./dist/books.js",
     "translate": "pnpm run build && NODE_USE_ENV_PROXY=1 node ./dist/translate.js"
   },
   "keywords": [],

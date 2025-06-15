@@ -6,9 +6,9 @@ import path from 'path';
 
 import { getInfo } from './info.js';
 import { readChapters } from './chapters.js';
+import { Page } from "puppeteer-core"
 
 const program = new Command();
-
 program
   .requiredOption('-u, --url <string>', 'The novel URL to scrape')
   .option('-c, --chrome-path <path>', 'Path to Chrome executable',
@@ -32,12 +32,26 @@ async function saveJsonTo(obj: any, dirPath: string, fileName: string) {
     defaultViewport: { width: 1024, height: 1600 },
   });
 
-  const info = await getInfo(browser, opts.url);
-  console.log("Processing novel:", info.name)
-  await readChapters(browser, info);
+  const page = await browser.newPage();
+  await page.goto(opts.url);
 
-  const result = { ...info, updateAt: new Date().toISOString() };
-  await saveJsonTo(result, opts.output, `${info.name}.json`);
+  const hrefs = await page.$$eval("a", as =>
+    as
+      .map(a => a.getAttribute("href") || "")
+      .filter(href => /^\/page\/\d+$/.test(href))
+  );
+
+  const result = []
+  for await (const href of hrefs) {
+    const absUrl = "https://fanqienovel.com" + href
+    const info = await getInfo(browser, absUrl)
+    result.push({
+      ...info,
+      url: absUrl
+    })
+  }
+
+  saveJsonTo(result, opts.output, "page-links-" + new Date().getTime() + ".json")
 
   await browser.close();
 })();
