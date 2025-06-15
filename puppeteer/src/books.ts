@@ -46,7 +46,8 @@ async function saveJsonTo(obj: any, dirPath: string, fileName: string) {
     const absUrl = "https://fanqienovel.com" + href
     const info = await getInfo(browser, absUrl)
     result.push({
-      ...info,
+      name: info.name,
+      chapters: info.chapters.length,
       url: absUrl
     })
   }
